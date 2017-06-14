@@ -28,7 +28,7 @@ subpath_jpg_dir = aux.path_jpg_dir;
 %subpath_envi_dir = aux.path_envi_dir;
 %w_wavelength = aux.w_wavelength;
 %w_wavelength = aux.w_wavelength;
-%m_wavelength_file = aux.m_wavelength_file;
+m_wavelength_file = aux.m_wavelength_file;
 %m_wavelength_filepath = aux.m_wavelength_filepath;
 %m_rotation_angle = aux.m_rotation_angle;
 m_name = aux.m_name;
@@ -158,12 +158,12 @@ for m = 1:n_m;
         counter = counter + 1;
     end
     
-    D = dir('*MB365UV*');
-    D = remove_hiddenfiles(D);
-    for d = 1:numel(D);
-        file.images{counter} = sprintf('%s%s',subpath_jpg_dir{m}, D{d});
-        counter = counter + 1;
-    end
+%     D = dir('*MB365UV*');
+%     D = remove_hiddenfiles(D);
+%     for d = 1:numel(D);
+%         file.images{counter} = sprintf('%s%s',subpath_jpg_dir{m}, D{d});
+%         counter = counter + 1;
+%     end
     
     D = dir('*W385R25*');
     D = remove_hiddenfiles(D);
@@ -304,7 +304,13 @@ for m = 1:n_m;
         file.images{counter} = sprintf('%s%s',subpath_jpg_dir{m}, D{d});
         counter = counter + 1;
     end
-    
+
+    D = dir('*W365O22*');
+    D = remove_hiddenfiles(D);
+    for d = 1:numel(D);
+        file.images{counter} = sprintf('%s%s',subpath_jpg_dir{m}, D{d});
+        counter = counter + 1;
+    end
     
     %
     

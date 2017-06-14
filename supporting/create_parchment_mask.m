@@ -116,7 +116,7 @@ for m = 1:n_m
     filepath_parchment_mask_jpg =  sprintf('%s%s_parchment_mask.jpg',subpath_jpg_dir{m},m_name{m});
     filepath_parchment_mask_matlab=  sprintf('%s%s_parchment_mask.tif',subpath_matlab_dir{m},m_name{m});
     filepath_parchment_mask_tif =  sprintf('%s%s_parchment_mask.tif',subpath_tiff_dir{m},m_name{m});
-    if (~exist(filepath_parchment_mask_jpg, 'file') || ~exist(filepath_parchment_mask_tif, 'file') || ~exist(filepath_parchment_mask_matlab, 'file'))
+    if ( ~exist(filepath_parchment_mask_tif, 'file') || ~exist(filepath_parchment_mask_matlab, 'file'))% || ~exist(filepath_parchment_mask_jpg, 'file'))
         
     
     % Load first image for spectralon
@@ -169,10 +169,20 @@ for m = 1:n_m
     filepath_chopsticks_mask_tif =  sprintf('%s%s_chopsticks_mask.tif',subpath_tiff_dir{m},m_name{m});
 
     mask_chopsticks = imread(filepath_chopsticks_mask_tif);
+    
     filepath_chopsticks2_mask_tif =  sprintf('%s%s_chopsticks2_mask.tif',subpath_tiff_dir{m},m_name{m});
-
     mask_chopsticks2 = imread(filepath_chopsticks2_mask_tif);
     I = I | mask_chopsticks | mask_chopsticks2;
+    
+    %{
+    filepath_felt_mask_tif =  sprintf('%s%s_felt_mask.tif',subpath_tiff_dir{m},m_name{m});
+    mask_felt = imread(filepath_felt_mask_tif);
+    I = I | mask_felt;
+    
+    filepath_uv_mask_tif =  sprintf('%s%s_uv_mask.tif',subpath_tiff_dir{m},m_name{m});
+    mask_uv = imread(filepath_uv_mask_tif);
+    I = I | mask_uv;
+    %}
     
 %     border = false(size(I));
 %     border(1,:) = true;
@@ -184,15 +194,24 @@ for m = 1:n_m
 
     % Fill edges
     locations = [1 1];%; 1 size(I,2); size(I,1) 1; size(I,1) size(I,2)];
-    I = imfill(I, locations);
+    J = imfill(I, locations);
+    
+    if min(J(:)) == 0;
+       didntwork = true;
+       fprintf('                 \t\t%s\n', m_name{m});
+        imwrite(~I, filepath_parchment_mask_tif);
+        imwrite(~I, filepath_parchment_mask_matlab);
+        imwrite(~I, filepath_parchment_mask_jpg);
+        error('Parchment is not disconnected. Please fix in Photoshop and continue');
+    end
     
     % Hole filling: Assume parchment is connected
-    CC = bwconncomp(~I);
+    CC = bwconncomp(~J);
     numPixels = cellfun(@numel,CC.PixelIdxList);
     
     for i = 1:numel(numPixels)
         if numPixels(i) < info_min_pixels
-              I(CC.PixelIdxList{i}) = 1;
+              J(CC.PixelIdxList{i}) = 1;
         end
     end
 
@@ -212,9 +231,9 @@ for m = 1:n_m
     %I = imerode(I,se);
     
     fprintf('                 \t\t%s\n', m_name{m});
-    imwrite(~I, filepath_parchment_mask_tif);
-    imwrite(~I, filepath_parchment_mask_matlab);
-    imwrite(~I, filepath_parchment_mask_jpg);
+    imwrite(~J, filepath_parchment_mask_tif);
+    imwrite(~J, filepath_parchment_mask_matlab);
+    imwrite(~J, filepath_parchment_mask_jpg);
     end
 end
     

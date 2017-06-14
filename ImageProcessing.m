@@ -293,9 +293,16 @@ create_spectralon_mask(aux);
 create_chopsticks_mask(aux);
 
 create_chopsticks2_mask(aux);
+create_uv_mask(aux);
+
+create_felt_mask(aux);
+
 
 %% Create parchment mask 
 create_parchment_mask(aux);
+%% Create reflectance tiffs 
+
+reflectance_tiffs11(aux);
 
 %% Create ink mask 
 create_overtext_mask(aux);
@@ -306,14 +313,12 @@ create_undertext_mask(aux);
 reflectance_tiffs9_rgb(aux);
 
 
-%% Create reflectance tiffs 
 
-reflectance_tiffs11(aux);
  
 %filepath_rotation = sprintf('%srotation.mat', subpath_matlab_dir);
 %load(filepath_rotation);
 
-%% Create parchment mask 
+%% Register verso 
 register_verso_flipud(aux);
 
 
@@ -324,13 +329,16 @@ register_verso_flipud(aux);
 %resize_auxiliary_files(aux)
 
 %% Select ROI for statistics 
-gui_batch_select_ROI_wrapper2(aux)
+%gui_batch_select_ROI_wrapper2(aux)
  
 
 %% Select band subsets 
 
-%choose_band_subset(aux);
-%foo = 1;
+choose_cube_bands_aux(aux);
+
+%% Package data for IDL/ENVI Processing 
+package_data(aux);
+package_data_tiffs(aux);
 
 end
 

@@ -132,6 +132,23 @@ for m = 1:n_m
         mask_out = (mask_out >= 1);
         mask_out = imopen(mask_out, strel('disk', 30));
         
+        path_temp = sprintf('%s%s%s', path_target, m_name{m}, info_slash);
+        if ~exist(path_temp, 'dir');
+            mkdir(path_temp);
+        end
+        path_temp = sprintf('%s%s%s%s+tiff%s', path_target, m_name{m}, info_slash,m_name{m}, info_slash);
+        if ~exist(path_temp, 'dir');
+            mkdir(path_temp);
+        end
+        path_temp = sprintf('%s%s%s%s+jpg%s', path_target, m_name{m},info_slash, m_name{m}, info_slash);
+        if ~exist(path_temp, 'dir');
+            mkdir(path_temp);
+        end        
+        path_temp = sprintf('%s%s%s%s+matlab%s', path_target, m_name{m}, info_slash, m_name{m}, info_slash);
+        if ~exist(path_temp, 'dir');
+            mkdir(path_temp);
+        end        
+
         fprintf('                 \t\t%s\n', m_name{m});
         imwrite(mask_out, filepath_spectralon_mask_tif);
         imwrite(mask_out, filepath_spectralon_mask_matlab);

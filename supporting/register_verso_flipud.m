@@ -93,6 +93,10 @@ for m = 1:n_m
         new_suffix = '_Y';
     elseif strcmp(suffix,'_Y')
         new_suffix = '_X';
+    elseif contains(suffix, 'r') && ~strcmp(suffix(1),'_')
+        new_suffix = sprintf('%sv', suffix(1));
+    elseif contains(suffix, 'v') && ~strcmp(suffix(1),'_')
+        new_suffix = sprintf('%sr', suffix(1));
     end    
     
     str = sprintf('%s%s',m_name{m}(1:end-2),new_suffix);
@@ -104,10 +108,10 @@ for m = 1:n_m
         str = D{ix_valid};
     end
     
-    is_reverse = cellfun(@(x) contains(x,str), D);
-    if ~sum(is_reverse)
-        return
-    end
+%     is_reverse = cellfun(@(x) contains(x,str), D);
+%     if ~sum(is_reverse)
+%         return
+%     end
     
 
     
@@ -116,6 +120,66 @@ for m = 1:n_m
     filepath_mask_front = sprintf('%s%s_parchment_mask.tif',subpath_tiff_dir{m}, m_name{m});
     mask_front = imread(filepath_mask_front);
     filepath_mask_reverse = sprintf('%s%s/%s+tiff/%s_parchment_mask.tif', path_target, name_reverse, name_reverse, name_reverse);
+    filepath_RGB_reverse = sprintf('%s%s/%s+tiff/%s_DJK_true.tif', path_target, name_reverse, name_reverse, name_reverse);
+    path_reverse = sprintf('%s%s/', path_source, name_reverse);
+    D = dir(path_reverse);
+    D = remove_hiddenfiles(D);
+    is_ir = cellfun(@(x) contains(x,'MB655DR'), D);
+    ix_ir = find(is_ir);
+    ix_ir = ix_ir(1);
+
+    filepath_gray_reverse = sprintf('%s%s%s%s', path_target, name_reverse, info_slash, D{ix_ir});
+    if ~exist(filepath_mask_reverse, 'file') || ~exist(filepath_RGB_reverse, 'file') || ~exist(filepath_gray_reverse, 'file');
+        aux.m_name = {name_reverse};
+        aux.m_path_upper = {strrep(m_path_upper{m}, suffix, new_suffix)};
+        ix_delim = strfind(aux.m_name{m}, aux.options_delimiter);
+        aux.m_mss = {aux.m_name{m}(1:ix_delim(end)-1)};
+        aux.m_folio = {aux.m_name{m}(ix_delim(end)+1:end)};
+        aux.path_tiff_dir = {strrep(aux.path_tiff_dir{m}, suffix, new_suffix)};
+        aux.path_jpg_dir = {strrep(aux.path_jpg_dir{m}, suffix, new_suffix)};
+        aux.path_tiff_mask_dir = {strrep(aux.path_tiff_mask_dir{m}, suffix, new_suffix)};
+        aux.path_jpg_mask_dir = {strrep(aux.path_jpg_mask_dir{m}, suffix, new_suffix)};
+        aux.path_matlab_dir = {strrep(aux.path_matlab_dir{m}, suffix, new_suffix)};
+        aux.path_envi_dir = {strrep(aux.path_envi_dir{m}, suffix, new_suffix)};
+        aux.m_wavelength_filepath = [];
+        aux.m_wavelength_file = [];
+        aux.m_wavelength = [];
+        aux.m_wavelength_file_new = [];
+        for w = 1:numel(m_wavelength_filepath{m})
+            aux.m_wavelength_filepath{1}{w} = strrep(m_wavelength_filepath{m}{w}, suffix, new_suffix);
+            aux.m_wavelength_file{1}{w} = strrep(m_wavelength_file{m}{w}, suffix, new_suffix);
+            aux.m_wavelength{1}{w} = strrep(m_wavelength{m}{w}, suffix, new_suffix);
+            aux.m_wavelength_file_new{1}{w} = strrep(m_wavelength_file_new{m}{w}, suffix, new_suffix);
+        end
+        path_up = sprintf('%s%s%s',path_target, aux.m_name{1}, info_slash);
+        if ~exist(path_up, 'dir')
+            mkdir(path_up);
+        end
+        path_temp = sprintf('%s%s%s%s+tiff%s',path_target, aux.m_name{1}, info_slash, aux.m_name{1}, info_slash);
+        if ~exist(path_temp, 'dir')
+            mkdir(path_temp);
+        end
+        path_temp = sprintf('%s%s%s%s+tiffm%s',path_target, aux.m_name{1}, info_slash, aux.m_name{1}, info_slash);
+        if ~exist(path_temp, 'dir')
+            mkdir(path_temp);
+        end
+        path_temp = sprintf('%s%s%s%s+jpg%s',path_target, aux.m_name{1}, info_slash, aux.m_name{1}, info_slash);
+        if ~exist(path_temp, 'dir')
+            mkdir(path_temp);
+        end
+        path_temp = sprintf('%s%s%s%s+jpgm%s',path_target, aux.m_name{1}, info_slash, aux.m_name{1}, info_slash);
+        if ~exist(path_temp, 'dir')
+            mkdir(path_temp);
+        end        
+        create_spectralon_mask(aux);
+        create_chopsticks_mask(aux);
+        create_chopsticks2_mask(aux);
+        create_parchment_mask(aux);
+        reflectance_tiffs9_rgb(aux);
+        reflectance_tiffs11(aux,'MB655DR');
+    end
+        
+        
     mask_reverse = imread(filepath_mask_reverse);
     
     mask_reverse_flip = flipud(mask_reverse);
@@ -220,12 +284,16 @@ for m = 1:n_m
     D2 = remove_hiddenfiles(D2);
     is_IR = cellfun(@(x) contains(x,'MB655DR'), D2);
     ix_IR = find(is_IR);
-    if isempty(ix_IR)
-        continue
+    if isempty(ix_IR);
+        reflectance_tiffs11(aux,'MB655DR');
     end
     ix_IR = ix_IR(end);
     
     filepath_reverse = sprintf('%s%s', path_out,D2{ix_IR});
+    if ~exist(filepath_reverse, 'file');
+        foo = 1;
+    end
+    
     I_reverse = imread(filepath_reverse);
     switch flip
         case 'ud'

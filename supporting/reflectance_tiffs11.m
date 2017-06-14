@@ -1,4 +1,4 @@
-function [] = reflectance_tiffs11( aux )
+function [] = reflectance_tiffs11( aux, varargin )
 %NORMALIZED_ENVI_CUBE Create a normalized ENVI image cube
 %
 %   There is no input to this function. Typing reflectance_tiffs in the
@@ -143,10 +143,14 @@ for m = 1:n_m
     fprintf(' \n');
     %fprintf(' \t');
     % Go through each wavelength image
+    docontinue = false; 
     for w = 1:n_w;
         fprintf('. ');
         %continue
         % Continue to next image if raking
+        if docontinue;
+            continue
+        end
         if w_isrs(w) || w_isre(w); continue; end
         
         % If the stretched file does not exist, begin
@@ -169,9 +173,30 @@ for m = 1:n_m
             m_mss{m},m_folio{m});
 
         if  exist(filepath_tif,'file') && exist(filepath_jpg,'file') && ...
-            exist(filepath_tif_mask,'file') && exist(filepath_jpg_mask,'file')
+            exist(filepath_tif_mask,'file') && exist(filepath_jpg_mask,'file') && (isempty(varargin))
             % exist(filepath_summary_txt, 'file')
               continue
+        end
+        
+        nVarargs = length(varargin);
+        if nVarargs > 0;
+            w_isrb = cellfun(@(x) contains(x,'MB655DR'), w_wavelength);
+            n_w  = 1;
+            n_m = 1;
+            w = find(w_isrb);
+            w = w(1);
+            docontinue = true;
+            band_number = m_wavelength_file{m}{w}(end-8:end-6);
+            wavelength = m_wavelength_file{m}{w}(end-16:end-10);
+            filepath_tif = sprintf('%s%s+%s_%s.tif',...
+                subpath_tiff_dir{m}, m_name{m}, band_number, wavelength);
+            filepath_jpg = sprintf('%s%s+%s_%s.jpg',...
+                subpath_jpg_dir{m}, m_name{m}, band_number, wavelength);
+            filepath_tif_mask = sprintf('%s%s%s+%s_%s.tif',...
+                subpath_tiff_mask_dir{m}(1:end-1), info_slash,m_name{m}, band_number, wavelength);
+            filepath_jpg_mask = sprintf('%s%s%s+%s_%s.jpg',...
+                subpath_jpg_mask_dir{m}(1:end-1), info_slash,m_name{m}, band_number, wavelength);
+            
         end
         
         I = double(imread(m_wavelength_filepath{m}{w}));
@@ -263,10 +288,10 @@ for m = 1:n_m
         %         clear command exifout k exifrotation
         
         % Write tif image
-        %if  ~exist(filepath_tif,'file');
+        if  ~exist(filepath_tif,'file')
         %fprintf('                 \t\t%s\n', m_name{m});
-        %  imwrite(uint16(65536*J),filepath_tif,'tif');
-        %end
+         imwrite(uint16(65536*J),filepath_tif,'tif');
+        end
         
         % If the jpg file does not exist, begin
         %if  ~exist(filepath_jpg,'file');
@@ -277,7 +302,7 @@ for m = 1:n_m
         %bitdepth = iminfo.BitsPerSample(1);
         %maxval = 2^bitdepth;
         Jjpg = uint8(256*Jjpg);
-        %   imwrite(Jjpg,filepath_jpg,'jpeg','Quality', 50);
+        imwrite(Jjpg,filepath_jpg,'jpeg','Quality', 50);
         
         % Repeat for mask
         J(~parchment_mask) = 1;
@@ -308,11 +333,11 @@ for m = 1:n_m
         save(filepath_stretchval,'w_stretchval');
     end
     
-    cell_summary = cell(n_w, 4);
-    cell_summary(:,1) = w_wavelength;
-    cell_summary(:,2) = cellstr(num2str(w_aperture));
-    cell_summary(:,3) = cellstr(num2str(w_shutter_speed));
-    cell_summary(:,4) = cellstr(num2str(w_stretchval));
+%     cell_summary = cell(n_w, 4);
+%     cell_summary(:,1) = w_wavelength;
+%     cell_summary(:,2) = cellstr(num2str(w_aperture));
+%     cell_summary(:,3) = cellstr(num2str(w_shutter_speed));
+%     cell_summary(:,4) = cellstr(num2str(w_stretchval));
     
     %DJK if ~exist(filepath_summary_txt, 'file');
     %DJK     dlmcell(filepath_summary_txt,cell_summary);

@@ -239,7 +239,7 @@ for m = 1:n_m;
     RGB_jpg = uint8(RGB*256);
     
     fprintf('                 \t\t%s\n', m_name{m});
-    %imwrite(RGB_tiff, filepath_tiff, 'tif');
+    imwrite(RGB_tiff, filepath_tiff, 'tif');
     imwrite(RGB_jpg, filepath_jpg, 'jpg', 'quality', 50);
     
     

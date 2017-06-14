@@ -97,6 +97,11 @@ for m = 1:n_m
         mask_overtext = imopen(mask_overtext, strel('disk', 2));
         %I_tx = imadjust(I_tx ,stretchlim(I_tx), []);
         
+        % Remove background 
+        filepath_I = sprintf('%s%s_parchment_mask.tif', subpath_tiff_dir{m}, m_name{m});
+        I = imread(filepath_I);   
+        mask_overtext(~I) = 0;
+        
         
         fprintf('                 \t\t%s\n', m_name{m});
         imwrite(mask_overtext, filepath_undertext_mask_tif);

@@ -124,6 +124,7 @@ handles.himg = imshow(handles.I{handles.b},[0,255]);
 colormap('gray')
 axis image
 
+%
 %handles.tif_dir = sprintf('%stif%s', handles.target_dir(1:end-4), handles.target_dir(end));
 filepath_parchment_mask = sprintf('%s%s_parchment_mask.tif', handles.aux.path_tiff_dir{handles.aux.m},handles.aux.m_name{handles.aux.m});
 filepath_overtext_mask = sprintf('%s%s_overtext_mask.tif', handles.aux.path_tiff_dir{handles.aux.m},handles.aux.m_name{handles.aux.m}); 
@@ -195,14 +196,15 @@ handles.mapexists = true;
 % handles.map3(mask) = handles.colormap(handles.m,3);
 handles.mapexists = true;
 handles.roi_tf = true;
+%}
 
 handles.xlim = get(handles.axes1,'xlim');
 handles.ylim = get(handles.axes1,'ylim');
 handles.xlimorig = get(handles.axes1,'xlim');
 handles.ylimorig = get(handles.axes1,'ylim');
 hold on;
-handles.h_roi = plot(handles.xlim(1),handles.ylim(1));
-handles.h_map = plot(handles.xlim(1),handles.ylim(1));
+%handles.h_roi = plot(handles.xlim(1),handles.ylim(1));
+%handles.h_map = plot(handles.xlim(1),handles.ylim(1));
 guidata(hObject, handles);
 
 % UIWAIT makes gui_select_roi2 wait for user response (see UIRESUME)
@@ -301,12 +303,38 @@ J2 = handles.I{1}(:,:,2);
 J3 = handles.I{1}(:,:,3);
 handles.colormap01 = handles.colormap./255;
 
+wildcard = 'W365O22';
+%cd(handles.aux.path_tiff_dir{handles.aux.m});
+is_valid = cellfun(@(x) contains(x,wildcard), handles.aux.m_wavelength{handles.aux.m});
+ix_valid = find(is_valid);
+ix_valid = ix_valid(1);
+%wavelength = handles.aux.m_wavelength_file_new;
+filepath_I = sprintf('%s',handles.aux.path_tiff_dir{handles.aux.m},handles.aux.m_wavelength_file_new{handles.aux.m}{ix_valid});
+I1 = imresize(double(imread(filepath_I))./65535, size(J1));
+I1 = I1./max(I1(:));
+I2 = I1;
+I3 = I1;
+
+D = dir('*_F.tif');
+w_wavelength = remove_hiddenfiles(D);
+n_w = numel(w_wavelength);
+for w = 1:n_w
+    ix_delimiter = strfind(w_wavelength{w},options_delimiter_wavelength);
+    w_wavelength{w} = w_wavelength{w}(ix_delimiter:end);
+end
+
+
 for m = 2:n_m;
+    I1(handles.mask(:,:,m)) = .75*I1(handles.mask(:,:,m)) + 0.25*(handles.colormap01(m,1));
+    I2(handles.mask(:,:,m)) = .75*I2(handles.mask(:,:,m)) + 0.25*(handles.colormap01(m,2));
+    I3(handles.mask(:,:,m)) = .75*I3(handles.mask(:,:,m)) + 0.25*(handles.colormap01(m,3));
+
     J1(handles.mask(:,:,m)) = .75*J1(handles.mask(:,:,m)) + 0.25*(handles.colormap01(m,1));
     J2(handles.mask(:,:,m)) = .75*J2(handles.mask(:,:,m)) + 0.25*(handles.colormap01(m,2));
     J3(handles.mask(:,:,m)) = .75*J3(handles.mask(:,:,m)) + 0.25*(handles.colormap01(m,3));
 end
 J = cat(3,J1,J2,J3);
+I = cat(3,I1,I2,I3);
 
 D = dir('*map*');
 n_d = numel(D);
@@ -321,7 +349,8 @@ max_map = max([current_maps;0]);
  
 filepath_map = sprintf('%s%s_mapTr%02.0f.tif',envi_dir,cube,max_map + 1);
 imwrite(uint8(J*255),filepath_map, 'jpeg','quality',80);
- 
+filepath_map = sprintf('%s%s_mapTrGray%02.0f.tif',envi_dir,cube,max_map + 1);
+imwrite(uint8(I*255),filepath_map, 'jpeg','quality',80);
 
 % Save alpha image KTK 
 % J1 = handles.I{2}(:,:,1);
